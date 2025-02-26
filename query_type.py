@@ -67,4 +67,3 @@ def handle_document_query(index, prompt, llm):
             
     # Append assistant response to message history
     st.session_state.messages.append({"role": "assistant", "content": response_content})
-

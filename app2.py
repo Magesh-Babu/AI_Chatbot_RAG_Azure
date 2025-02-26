@@ -133,3 +133,4 @@ async def status():
     if global_document_name is not None:
         return JSONResponse(content={"message": f"Document '{global_document_name}' is uploaded.", "status": True})
     return JSONResponse(content={"message": "No Document uploaded.", "status": False})
+
