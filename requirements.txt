@@ -7,3 +7,14 @@ llama-index-vector-stores-chroma
 llama-index-readers-file
 azure-ai-inference
 transformers
+fastapi
+uvicorn
+gunicorn
+llama-index
+pypdf
+sentence-transformers
+azure-ai-ml
+requests
+python-dotenv
+huggingface_hub
+tiktoken
