@@ -10,6 +10,9 @@ import chromadb
 AZURE_META_API = os.getenv("AZURE_META_API")
 AZURE_META_ENDPOINT = os.getenv("AZURE_META_ENDPOINT")
 
+# Initialize chromadb_client
+chroma_client = chromadb.PersistentClient(path="./chroma_db")
+
 def initialize_llm():
     """Initialize and return the Azure AI completions model."""
     return AzureAICompletionsModel(
@@ -22,14 +25,26 @@ def connect_chromadb_create_index(documents):
     Connects to chromaDB vector stores for persistent storage.
     Creates and returns a VectorStore index from the documents.
     """
-    chroma_client = chromadb.PersistentClient(path="./chroma_db")
-    chroma_collection = chroma_client.get_or_create_collection("given_doc")
-    embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
-    # set up ChromaVectorStore and load in data
-    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
-    index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, embed_model=embed_model)
-    return index
+
+    try:
+        chroma_collection = chroma_client.get_or_create_collection("given_doc")
+        embed_model = HuggingFaceEmbedding(model_name="BAAI/bge-small-en-v1.5")
+        # set up ChromaVectorStore and load in data
+        vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+        index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, embed_model=embed_model)
+        return index
+    except Exception as e:
+        raise Exception(f"Error connecting to ChromaDB or creating index: {e}")
+    
+
+def clear_chromadb_db():
+    """Clear the chromadb database"""
+    try:
+        chroma_client.delete_collection("given_doc")
+    except Exception as e:
+        raise Exception(f"Error clearing ChromaDB collection: {e}")    
+
 
 def display_chat():
     """Displays chat messages stored in session state."""
@@ -44,8 +59,6 @@ def display_chat():
 def clear_chat_history():
     """Clears the chat history and resets the session state."""
     st.session_state.messages = []
-    if "chat_engine" in st.session_state:
-        del st.session_state.chat_engine
     if "uploaded_file_path" in st.session_state:
         try:
             os.remove(st.session_state.uploaded_file_path)

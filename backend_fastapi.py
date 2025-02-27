@@ -8,7 +8,8 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from llama_index.core import SimpleDirectoryReader
 from query_type import handle_general_query, handle_document_query
-from chat import initialize_llm, connect_chromadb_create_index
+from chat import initialize_llm, connect_chromadb_create_index, clear_chromadb_db
+import chromadb
 
 load_dotenv()
 
@@ -21,29 +22,20 @@ global_document_name = None
 # Initialize the Azure LLM globally
 llm = initialize_llm()
 
-# --- Streamlit-related functions (modified for FastAPI context) ---
-def process_document(file_path: str) -> str:
-    """Processes a document and creates an index.
+# --- Document Processing ---
 
-    Args:
-        file_path: The path to the document file.
-
-    Returns:
-        A success message.
-        Raises HTTPException on error.
-    """
-    global global_index
-    global global_document_name
-
+def create_index_from_document(file_path: str) -> None:
+    """Creates a vector index from the uploaded document."""
+    global global_index, global_document_name
     try:
         reader = SimpleDirectoryReader(input_files=[file_path])
         documents = reader.load_data()
         global_index = connect_chromadb_create_index(documents)
         global_document_name = os.path.basename(file_path)
-        return f"Document '{global_document_name}' uploaded and ingested successfully!"
-
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
+
 
 def get_document_answer(question: str) -> str:
     """Gets an answer to a question about the uploaded document.
@@ -84,26 +76,21 @@ def get_general_answer(question: str) -> str:
 
 
 # --- FastAPI Endpoints ---
+
 @app.post("/upload-document/")
 async def upload_document(file: UploadFile = File(...)):
-    """Uploads a document (PDF or text) and processes it."""
-    if file.content_type not in ["application/pdf", "text/plain"]:
-        raise HTTPException(status_code=400, detail="Invalid file type. Only PDF and text files are allowed.")
-
+    """Uploads a document and creates an index from it."""
     try:
-        # Save the uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp_file:
             shutil.copyfileobj(file.file, tmp_file)
             tmp_file_path = tmp_file.name
 
-        # Process the document and create an index
-        result = process_document(tmp_file_path)
-        return JSONResponse(content={"message": result, "document_name": file.filename})
+        create_index_from_document(tmp_file_path)
+        return JSONResponse(content={"message": f"Document '{file.filename}' uploaded and processed successfully."})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error during document upload or processing: {str(e)}")
     finally:
-        # Remove the temporary file after processing
-        if os.path.exists(tmp_file_path):
+        if 'tmp_file_path' in locals():
             os.remove(tmp_file_path)
 
 @app.post("/document-query/")
@@ -123,9 +110,13 @@ async def clear_index():
     """Clears the document index (resets the document-specific chat)."""
     global global_index
     global global_document_name
-    global_index = None
-    global_document_name = None
-    return JSONResponse(content={"message": "Document index cleared."})
+    try:
+        global_index = None
+        global_document_name = None
+        clear_chromadb_db()
+        return JSONResponse(content={"message": "Document index cleared."})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error during clearing index: {str(e)}")
 
 @app.get("/status/")
 async def status():
