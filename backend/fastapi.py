@@ -2,13 +2,14 @@ import os
 import tempfile
 import shutil
 from typing import List
-
 from dotenv import load_dotenv
+
+from llama_index.core import SimpleDirectoryReader
+from modules.query_type import handle_general_query, handle_document_query
+from modules.chat import initialize_llm, connect_chromadb_create_index, clear_chromadb_db
+
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
-from llama_index.core import SimpleDirectoryReader
-from query_type import handle_general_query, handle_document_query
-from chat import initialize_llm, connect_chromadb_create_index, clear_chromadb_db
 import chromadb
 
 load_dotenv()

@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import os
 import tempfile
-from chat import display_chat, clear_chat_history
+from modules.chat import display_chat, clear_chat_history
 
 def main():
 
