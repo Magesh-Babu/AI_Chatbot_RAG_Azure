@@ -1,0 +1,30 @@
+version: "3.11"
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - AZURE_META_ENDPOINT=${AZURE_META_ENDPOINT}
+      - AZURE_META_API=${AZURE_META_API}
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/status"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+      timeout: 5s
+      
+  frontend:
+    build: ./frontend
+    ports:
+      - "8501:8501"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - app-network
+
+networks:
+  app-network:

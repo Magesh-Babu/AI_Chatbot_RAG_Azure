@@ -25,7 +25,7 @@ def clear_chat_history():
 
 def main():
     # Get the FastAPI base URL from an environment variable
-    FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://localhost:8000")  # Default to localhost if not set
+    FASTAPI_BASE_URL = os.getenv("FASTAPI_BASE_URL", "http://backend:8000")  # Default to localhost if not set
 
     st.set_page_config(page_title="AI Chatbot with RAG", page_icon="🔥")
 
