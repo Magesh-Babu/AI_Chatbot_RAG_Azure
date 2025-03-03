@@ -15,6 +15,8 @@ def display_chat():
 def clear_chat_history():
     """Clears the chat history and resets the session state."""
     st.session_state.messages = []
+    if "chat_engine" in st.session_state:
+        del st.session_state.chat_engine    
     if "uploaded_file_path" in st.session_state:
         try:
             os.remove(st.session_state.uploaded_file_path)
@@ -48,11 +50,14 @@ def main():
 
         if st.sidebar.button('Clear Chat History'):
             try:
-                response = requests.get(f"{FASTAPI_BASE_URL}/clear-index/")
-                response.raise_for_status()
-                data = response.json()
-                st.success(data['message'])
-                clear_chat_history()
+                if uploaded_document is None:
+                    clear_chat_history()
+                else:
+                    response = requests.get(f"{FASTAPI_BASE_URL}/clear-index/")
+                    response.raise_for_status()
+                    data = response.json()
+                    st.success(data['message'])
+                    clear_chat_history()
             except requests.exceptions.RequestException as e:
                 st.error(f"Error clearing index or chat history: {e}")
 
