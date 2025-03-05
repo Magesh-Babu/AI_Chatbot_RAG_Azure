@@ -31,8 +31,8 @@ jobs:
       with:
         push: true
         tags: containerstorage01.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_ff29dcdb105a43498cf6cd901d1b29f3 }}/backend:${{ github.sha }}
-        file: ./main/backend/Dockerfile
-        context: ./main/backend
+        file: ./backend/Dockerfile
+        context: ./backend
 
   deploy:
     runs-on: ubuntu-latest
