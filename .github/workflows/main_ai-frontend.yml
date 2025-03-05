@@ -31,13 +31,14 @@ jobs:
       with:
         push: true
         tags: containerstorage01.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_e16b9f3a78f149da94070741fca4a9f0 }}/frontend:${{ github.sha }}
-        file: ./Dockerfile
+        file: ./frontend/Dockerfile
+        context: ./frontend
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'production'
+      name: 'development'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
@@ -46,6 +47,5 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'ai-frontend'
-        slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_f23b98a574934b4fb194c0eb5188acf8 }}
         images: 'containerstorage01.azurecr.io/${{ secrets.AzureAppService_ContainerUsername_e16b9f3a78f149da94070741fca4a9f0 }}/frontend:${{ github.sha }}'
