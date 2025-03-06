@@ -10,12 +10,27 @@ from chat import initialize_llm, connect_chromadb_create_index, clear_chromadb_d
 
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 import chromadb
 
 load_dotenv()
 
 # --- FastAPI Setup ---
 app = FastAPI()
+
+# Allow frontend to access backend
+origins = [
+    "https://ai-frontend-hrcwf4gfdhdadhgh.swedencentral-01.azurewebsites.net/",  # Frontend URL
+    "http://localhost:8501",  # For local testing
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Global variable to store the index (initialized when a document is uploaded)
 global_index = None
