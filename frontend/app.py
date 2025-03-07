@@ -1,7 +1,6 @@
+import os
 import streamlit as st
 import requests
-import os
-import tempfile
 
 def display_chat():
     """Displays chat messages stored in session state."""
@@ -10,13 +9,13 @@ def display_chat():
         st.session_state.messages = [{"role": "assistant", "content": "Hello, How can i help you?"}]
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.write(message["content"])       
+            st.write(message["content"])   
 
 def clear_chat_history():
     """Clears the chat history and resets the session state."""
     st.session_state.messages = []
     if "chat_engine" in st.session_state:
-        del st.session_state.chat_engine    
+        del st.session_state.chat_engine
     if "uploaded_file_path" in st.session_state:
         try:
             os.remove(st.session_state.uploaded_file_path)
@@ -26,7 +25,8 @@ def clear_chat_history():
 
 
 def main():
-    # Get the FastAPI base URL from an environment variable
+    """ Main function to run the Streamlit app."""
+    # Get the FastAPI base URL from an azure backend web app.
     FASTAPI_BASE_URL = "https://ai-backend-a9cufaetcqb7dpdb.swedencentral-01.azurewebsites.net"
 
     st.set_page_config(page_title="AI Chatbot with RAG", page_icon="🔥")
@@ -42,7 +42,7 @@ def main():
         if uploaded_document is not None:
             try:
                 files = {"file": (uploaded_document.name, uploaded_document.getvalue())}
-                response = requests.post(f"{FASTAPI_BASE_URL}/upload-document/", files=files)
+                response = requests.post(f"{FASTAPI_BASE_URL}/upload-document/", files=files, timeout=120)
                 response.raise_for_status()  # Raises an exception for bad status codes
                 st.success(response.json()['message'])
             except requests.exceptions.RequestException as e:
@@ -53,7 +53,7 @@ def main():
                 if uploaded_document is None:
                     clear_chat_history()
                 else:
-                    response = requests.get(f"{FASTAPI_BASE_URL}/clear-index/")
+                    response = requests.get(f"{FASTAPI_BASE_URL}/clear-index/", timeout=10)
                     response.raise_for_status()
                     data = response.json()
                     st.success(data['message'])
@@ -64,7 +64,7 @@ def main():
 
     # Main app logic
     try:
-        status_response = requests.get(f"{FASTAPI_BASE_URL}/status/")
+        status_response = requests.get(f"{FASTAPI_BASE_URL}/status/", timeout=10)
         status_response.raise_for_status()
         status_data = status_response.json()
         is_document_uploaded = status_data['status']
@@ -78,7 +78,7 @@ def main():
                 st.write(prompt)  # Display the user's message in the chat
 
             if is_document_uploaded:
-                response = requests.post(f"{FASTAPI_BASE_URL}/document-query/", params={"question": prompt})
+                response = requests.post(f"{FASTAPI_BASE_URL}/document-query/", params={"question": prompt}, timeout=10)
                 if response.status_code == 200:
                     data = response.json()
                     with st.chat_message("assistant"):
@@ -87,7 +87,7 @@ def main():
                 else:
                     st.error(f"Error querying document: {response.text}")
             else:
-                response = requests.post(f"{FASTAPI_BASE_URL}/general-query/", params={"question": prompt})
+                response = requests.post(f"{FASTAPI_BASE_URL}/general-query/", params={"question": prompt}, timeout=10)
                 if response.status_code == 200:
                     data = response.json()
                     with st.chat_message("assistant"):
