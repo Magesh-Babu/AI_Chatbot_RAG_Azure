@@ -1,17 +1,13 @@
 import os
 import tempfile
 import shutil
-from typing import List
 from dotenv import load_dotenv
-
 from llama_index.core import SimpleDirectoryReader
-from query_type import handle_general_query, handle_document_query
-from chat import initialize_llm, connect_chromadb_create_index, clear_chromadb_db
-
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-import chromadb
+from query_type import handle_general_query, handle_document_query
+from chat import initialize_llm, connect_chromadb_create_index, clear_chromadb_db
 
 load_dotenv()
 
@@ -41,7 +37,15 @@ llm = initialize_llm()
 # --- Document Processing ---
 
 def create_index_from_document(file_path: str) -> None:
-    """Creates a vector index from the uploaded document."""
+    """Creates a vector index from the uploaded document using embedding model.
+    
+    Args:
+        file_path: uploaded document file path.
+
+    Returns:
+        vectorized index from the document.
+        Raises HTTPException on error.
+    """
     global global_index, global_document_name
     try:
         reader = SimpleDirectoryReader(input_files=[file_path])
@@ -50,8 +54,9 @@ def create_index_from_document(file_path: str) -> None:
         global_document_name = os.path.basename(file_path)
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing document: {str(e)}") from e
 
+# --- Querying ---
 
 def get_document_answer(question: str) -> str:
     """Gets an answer to a question about the uploaded document.
@@ -71,7 +76,7 @@ def get_document_answer(question: str) -> str:
         answer = handle_document_query(global_index, question, llm)
         return answer
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error querying document: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error querying document: {str(e)}") from e
 
 
 def get_general_answer(question: str) -> str:
@@ -88,7 +93,7 @@ def get_general_answer(question: str) -> str:
         answer = handle_general_query(question, llm)
         return answer
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error with general query: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error with general query: {str(e)}") from e
 
 
 # --- FastAPI Endpoints ---
@@ -104,7 +109,7 @@ async def upload_document(file: UploadFile = File(...)):
         create_index_from_document(tmp_file_path)
         return JSONResponse(content={"message": f"Document '{file.filename}' uploaded and processed successfully."})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during document upload or processing: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error during document upload or processing: {str(e)}") from e
     finally:
         if 'tmp_file_path' in locals():
             os.remove(tmp_file_path)
@@ -132,7 +137,7 @@ async def clear_index():
         clear_chromadb_db()
         return JSONResponse(content={"message": "Document index cleared."})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error during clearing index: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error during clearing index: {str(e)}") from e
 
 @app.get("/status/")
 async def status():
@@ -140,4 +145,3 @@ async def status():
     if global_document_name is not None:
         return JSONResponse(content={"message": f"Document '{global_document_name}' is uploaded.", "status": True})
     return JSONResponse(content={"message": "No Document uploaded.", "status": False})
-
