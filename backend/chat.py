@@ -34,7 +34,7 @@ def connect_chromadb_create_index(documents):
         index = VectorStoreIndex.from_documents(documents, storage_context=storage_context, embed_model=embed_model)
         return index
     except Exception as e:
-        raise Exception(f"Error connecting to ChromaDB or creating index: {e}")
+        raise Exception(f"Error connecting to ChromaDB or creating index: {e}") from e
     
 
 def clear_chromadb_db():
@@ -42,7 +42,5 @@ def clear_chromadb_db():
     try:
         chroma_client.delete_collection("given_doc")
     except Exception as e:
-        raise Exception(f"Error clearing ChromaDB collection: {e}")    
-
-
-
+        raise Exception(f"Error clearing ChromaDB collection: {e}") from e
+    

@@ -122,7 +122,7 @@ async def document_query(question: str):
 
 @app.post("/general-query/")
 async def general_query(question: str):
-    """Asks a general question (no document needed)."""
+    """Asks a general question without document context."""
     answer = get_general_answer(question)
     return JSONResponse(content={"answer": answer})
 
