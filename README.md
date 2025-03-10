@@ -9,8 +9,7 @@ The application is **containerized using Docker** and deployed on **Azure**. It 
 - **CI/CD:** Integrated **GitHub Actions** for automated builds, testing, and deployment.
 
 ### 🌐 Try the App
-Check out the deployed app on **Azure**:  
-[**Live Demo**](https://ai-chatbot-rag-magesh-babu.streamlit.app/)  
+Check out the deployed app on **Azure**: [**Live Demo**](https://ai-frontend-hrcwf4gfdhdadhgh.swedencentral-01.azurewebsites.net/)  
 
 ## 🔥 Features
 
