@@ -20,7 +20,7 @@ Check out the deployed app on **Azure**: [**Live Demo**](https://ai-frontend-hrc
    - **Streamlit Frontend**: Provides an interactive UI.
 4. **RAG Implementation:** Uses LlamaIndex for efficient data retrieval and augmentation.
 5. **LLM Integration:** Powered by the Llama 3 (8B) model deployed on Azure.
-6. **Embeddings:** Utilizes a Hugging Face embedding model for semantic search.
+6. **Embeddings:** Utilizes a Cohere embedding model for semantic search.
 7. **CI/CD Pipeline:** Uses GitHub Actions to automate build, testing, and deployment.
 
 ## 🛠️ Technology Stack
@@ -33,7 +33,7 @@ Check out the deployed app on **Azure**: [**Live Demo**](https://ai-frontend-hrc
 | **Llama 3 (8B)** | Large Language Model for chatbot responses |
 | **Azure** | Cloud platform for hosting |
 | **LlamaIndex** | Efficient document retrieval & processing |
-| **Hugging Face** | Embedding models for semantic search |
+| **Cohere** | Embedding models for semantic search |
 | **GitHub Actions** | CI/CD automation |
 
 ---
