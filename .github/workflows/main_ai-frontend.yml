@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  IMAGE_OWNER: magesh-babu
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -28,7 +31,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/frontend:${{ github.sha }}
+          tags: ghcr.io/${{ env.IMAGE_OWNER }}/frontend:${{ github.sha }}
           file: ./frontend/Dockerfile
           context: ./frontend
 
@@ -49,7 +52,7 @@ jobs:
         id: deploy
         uses: azure/container-apps-deploy-action@v2
         with:
-          imageToDeploy: ghcr.io/${{ github.repository_owner }}/frontend:${{ github.sha }}
+          imageToDeploy: ghcr.io/${{ env.IMAGE_OWNER }}/frontend:${{ github.sha }}
           containerAppName: ai-frontend
           resourceGroup: resource_apr_2026
           containerAppEnvironment: app-environment
