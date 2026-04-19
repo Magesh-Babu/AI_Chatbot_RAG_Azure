@@ -7,6 +7,8 @@ services:
     environment:
       - AZURE_META_ENDPOINT=${AZURE_META_ENDPOINT}
       - AZURE_META_API=${AZURE_META_API}
+      - AZURE_COHERE_ENDPOINT=${AZURE_COHERE_ENDPOINT}
+      - AZURE_COHERE_API=${AZURE_COHERE_API}
     networks:
       - app-network
     healthcheck:
