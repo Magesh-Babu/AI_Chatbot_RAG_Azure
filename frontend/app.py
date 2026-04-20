@@ -28,7 +28,7 @@ def main():
     """ Main function to run the Streamlit app."""
     # Get the FastAPI base URL from an azure backend web app.
     #FASTAPI_BASE_URL = "http://127.0.0.1:8000"
-    FASTAPI_BASE_URL = "https://ai-backend-a9cufaetcqb7dpdb.swedencentral-01.azurewebsites.net"
+    FASTAPI_BASE_URL = "https://ai-rag-backend.wittymushroom-cab33f1c.swedencentral.azurecontainerapps.io"
 
     st.set_page_config(page_title="AI Chatbot with RAG", page_icon="🔥")
 

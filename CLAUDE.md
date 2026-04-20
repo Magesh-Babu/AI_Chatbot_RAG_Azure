@@ -3,7 +3,7 @@
 ## Project Overview
 
 An AI-powered chatbot with two modes:
-- **General Query**: Answers questions directly via Llama 3 (8B) on Azure AI
+- **General Query**: Answers questions directly via Llama 3.3 (70B Instruct) on Azure AI
 - **Document RAG**: Users upload PDF/TXT → Cohere embeddings stored in ChromaDB → LlamaIndex retrieves context → Llama 3 answers
 
 **Microservices architecture**: FastAPI backend + Streamlit frontend, both containerized and deployed on Azure Container Apps via GitHub Actions CI/CD.
@@ -19,7 +19,7 @@ FastAPI Backend     (port 8000)
         ↓
 ChromaDB (./chroma_db/) ← Cohere embeddings (Azure AI)
         ↓
-Llama 3 8B (Azure AI)
+Llama 3.3 70B Instruct (Azure AI)
 ```
 
 ### Backend Endpoints
@@ -99,7 +99,7 @@ These are injected into the backend container via `docker-compose.yml`. The fron
 |-------|-----------|
 | Backend framework | FastAPI (Python 3.11) |
 | Frontend framework | Streamlit |
-| LLM | Llama 3 8B via Azure AI (`llama-index-llms-azure-inference`) |
+| LLM | Llama 3.3 70B Instruct via Azure AI (`llama-index-llms-azure-inference`) |
 | Embeddings | Cohere via Azure AI (`llama-index-embeddings-azure-inference`) |
 | RAG framework | LlamaIndex (`llama-index-core`) |
 | Vector store | ChromaDB (persistent at `./chroma_db/`) |
@@ -120,7 +120,7 @@ These are injected into the backend container via `docker-compose.yml`. The fron
 | Backend Container App | `ai-rag-backend` |
 | Frontend Container App | `ai-rag-frontend` |
 | Container Registry | GitHub Container Registry — `ghcr.io/magesh-babu` |
-| LLM Model | Llama 3 (8B) on Azure AI Services |
+| LLM Model | Llama 3.3 (70B Instruct) on Azure AI Services |
 | Embedding Model | Cohere on Azure AI Services |
 
 **Important:** After first deploy, update the backend URL in [frontend/app.py:31](frontend/app.py#L31) to the new `*.azurecontainerapps.io` URL shown in the portal.
