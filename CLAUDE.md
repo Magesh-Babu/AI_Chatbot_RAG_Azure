@@ -6,7 +6,7 @@ An AI-powered chatbot with two modes:
 - **General Query**: Answers questions directly via Llama 3 (8B) on Azure AI
 - **Document RAG**: Users upload PDF/TXT → Cohere embeddings stored in ChromaDB → LlamaIndex retrieves context → Llama 3 answers
 
-**Microservices architecture**: FastAPI backend + Streamlit frontend, both containerized and deployed on Azure Web Apps via GitHub Actions CI/CD.
+**Microservices architecture**: FastAPI backend + Streamlit frontend, both containerized and deployed on Azure Container Apps via GitHub Actions CI/CD.
 
 ---
 
@@ -89,7 +89,7 @@ These are injected into the backend container via `docker-compose.yml`. The fron
 | [backend/gunicorn.conf.py](backend/gunicorn.conf.py) | Production server config (1 Uvicorn worker) |
 | [frontend/app.py](frontend/app.py) | Streamlit UI, file upload, chat history, session state |
 | [docker-compose.yml](docker-compose.yml) | Local orchestration with health checks |
-| [.github/workflows/](. github/workflows/) | CI/CD: push to `main` → build image → push to ACR → deploy to Azure |
+| [.github/workflows/](.github/workflows/) | CI/CD: push to `main` → build image → push to GHCR → deploy to Azure Container Apps |
 
 ---
 
@@ -105,8 +105,8 @@ These are injected into the backend container via `docker-compose.yml`. The fron
 | Vector store | ChromaDB (persistent at `./chroma_db/`) |
 | Production server | Gunicorn + Uvicorn workers |
 | Containerization | Docker (python:3.11-slim) |
-| Container registry | Azure Container Registry (`containerstorage01.azurecr.io`) |
-| Hosting | Azure Web Apps — Sweden Central |
+| Container registry | GitHub Container Registry (`ghcr.io/magesh-babu`) |
+| Hosting | Azure Container Apps — Sweden Central |
 | CI/CD | GitHub Actions |
 
 ---
@@ -115,11 +115,15 @@ These are injected into the backend container via `docker-compose.yml`. The fron
 
 | Resource | Value |
 |----------|-------|
-| Container Registry | `containerstorage01.azurecr.io` |
-| Backend Web App | `ai-backend` → `ai-backend-a9cufaetcqb7dpdb.swedencentral-01.azurewebsites.net` |
-| Frontend Web App | `ai-frontend` → `ai-frontend-hrcwf4gfdhdadhgh.swedencentral-01.azurewebsites.net` |
+| Resource Group | `resource_apr_2026` |
+| Container Apps Environment | `app-environment` |
+| Backend Container App | `ai-rag-backend` |
+| Frontend Container App | `ai-rag-frontend` |
+| Container Registry | GitHub Container Registry — `ghcr.io/magesh-babu` |
 | LLM Model | Llama 3 (8B) on Azure AI Services |
 | Embedding Model | Cohere on Azure AI Services |
+
+**Important:** After first deploy, update the backend URL in [frontend/app.py:31](frontend/app.py#L31) to the new `*.azurecontainerapps.io` URL shown in the portal.
 
 ---
 
@@ -129,7 +133,7 @@ These are injected into the backend container via `docker-compose.yml`. The fron
 - **Global in-memory state** — `global_index` and `global_document_name` in [backend/main.py:32-33](backend/main.py#L32-L33) are process-level globals. This means multi-worker deployments would have inconsistent state. Currently safe because Gunicorn is configured to 1 worker ([backend/gunicorn.conf.py:12](backend/gunicorn.conf.py#L12)).
 - **No selective document clearing** — `/clear-index/` deletes the entire `given_doc` ChromaDB collection. There is no way to swap documents without a full reset.
 - **Single worker bottleneck** — 1 Gunicorn worker handles all requests sequentially. Fine for low traffic; will bottleneck under concurrent users.
-- **docker-compose missing Cohere env vars** — `AZURE_COHERE_ENDPOINT` and `AZURE_COHERE_API` are not listed in `docker-compose.yml` environment block (only Llama 3 vars are). Add them if running locally with Docker Compose.
+- **Azure Container Apps env vars** — `AZURE_META_ENDPOINT`, `AZURE_META_API`, `AZURE_COHERE_ENDPOINT`, `AZURE_COHERE_API` must be added manually in portal: Container App → Settings → Environment variables. The workflow does not set these.
 
 ---
 
@@ -137,7 +141,10 @@ These are injected into the backend container via `docker-compose.yml`. The fron
 
 Push to `main` branch triggers GitHub Actions workflows:
 1. Build Docker image for backend or frontend
-2. Push image to Azure Container Registry
-3. Deploy to Azure Web App (pulls new image)
+2. Push to GitHub Container Registry (`ghcr.io/magesh-babu/backend:<sha>` or `frontend:<sha>`)
+3. Azure login using `AZURE_CREDENTIALS` service principal
+4. Deploy to Azure Container Apps in `resource_apr_2026` using `azure/container-apps-deploy-action@v2`
+
+**GitHub Secrets required:** `AZURE_CREDENTIALS` (service principal JSON), `GHCR_PAT` (PAT with `read:packages` scope)
 
 Workflows: [.github/workflows/main_ai-backend.yml](.github/workflows/main_ai-backend.yml) and [.github/workflows/main_ai-frontend.yml](.github/workflows/main_ai-frontend.yml)
