@@ -1,5 +1,4 @@
 from llama_index.core.llms import ChatMessage
-import time
 
 def handle_general_query(prompt, llm):
     """
@@ -7,39 +6,51 @@ def handle_general_query(prompt, llm):
 
     Args:
         prompt (str): The general input question.
-        llm (AzureAICompletionsModel): An instance of a class or client that provides interaction with the llama 3 model in Azure.
+        llm (AzureAICompletionsModel): Azure AI completions client.
 
     Returns:
-        str: LLM generates response based on questions in the prompt.
+        str: LLM response text.
     """
+    if not prompt or not prompt.strip():
+        raise ValueError("Prompt cannot be empty.")
+    if llm is None:
+        raise ValueError("LLM instance is required.")
 
     messages = [
         ChatMessage(role="system", content="You are a helpful assistant."),
-        ChatMessage(role="user", content=prompt),
+        ChatMessage(role="user", content=prompt.strip()),
     ]
-    assistant_response = llm.chat(messages)
-    return assistant_response.message.content
-    
-    
+    try:
+        assistant_response = llm.chat(messages)
+        return assistant_response.message.content
+    except Exception as e:
+        raise RuntimeError(f"LLM call failed for general query: {e}") from e
+
+
 def handle_document_query(index, prompt, llm):
     """
-    Handles document based queries using the Azure AI model.
+    Handles document-based queries using the Azure AI model.
 
     Args:
-        index (float): vectorized form of input document
-        prompt (str): The relevant question about the document.
-        llm (AzureAICompletionsModel): An instance of a class or client that provides interaction with the llama 3 model in Azure.
+        index (VectorStoreIndex): Vectorized form of the input document.
+        prompt (str): The question about the document.
+        llm (AzureAICompletionsModel): Azure AI completions client.
 
     Returns:
-        str: LLM generates response based on questions with given document in the prompt.
+        str: LLM response text grounded in the document.
     """
+    if not prompt or not prompt.strip():
+        raise ValueError("Prompt cannot be empty.")
+    if index is None:
+        raise ValueError("Index is required for document query.")
+    if llm is None:
+        raise ValueError("LLM instance is required.")
 
-    chat_engine = index.as_chat_engine(
-        chat_mode="context", verbose=True, llm=llm, streaming=True
-    )
-    response_stream = chat_engine.stream_chat(prompt)
-
-    full_response=""
-    for token in response_stream.response_gen:
-        full_response+=token
-    return full_response
+    try:
+        chat_engine = index.as_chat_engine(
+            chat_mode="context", verbose=True, llm=llm, streaming=True
+        )
+        response_stream = chat_engine.stream_chat(prompt.strip())
+        return "".join(response_stream.response_gen)
+    except Exception as e:
+        raise RuntimeError(f"LLM call failed for document query: {e}") from e
