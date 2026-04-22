@@ -35,6 +35,7 @@ class TestConnectChromadbCreateIndex:
         mock_index = MagicMock()
         with patch("chat.chroma_client") as mock_client, \
              patch("chat.initialize_embed_model"), \
+             patch("chat.Settings"), \
              patch("chat.ChromaVectorStore"), \
              patch("chat.StorageContext"), \
              patch("chat.VectorStoreIndex") as mock_vector_index:
