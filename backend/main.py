@@ -17,10 +17,8 @@ logger = get_logger(__name__)
 app = FastAPI()
 
 # Allow frontend to access backend
-origins = [
-    "https://ai-frontend-hrcwf4gfdhdadhgh.swedencentral-01.azurewebsites.net/",  # Frontend URL
-    "http://localhost:8501",  # For local testing
-]
+_default_origins = "https://ai-frontend-hrcwf4gfdhdadhgh.swedencentral-01.azurewebsites.net/,http://localhost:8501"
+origins = os.getenv("ALLOWED_ORIGINS", _default_origins).split(",")
 
 app.add_middleware(
     CORSMiddleware,
