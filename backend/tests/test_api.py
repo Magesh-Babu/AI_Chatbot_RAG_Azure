@@ -82,7 +82,7 @@ class TestDocumentQuery:
     def test_valid_question_with_document_returns_answer(self, client):
         import main
         main.global_index = MagicMock()
-        with patch("main.handle_document_query", return_value="The answer"):
+        with patch("main.handle_document_query", return_value={"answer": "The answer", "sources": []}):
             response = client.post("/document-query/", params={"question": "What is this about?"})
         assert response.status_code == 200
         assert response.json()["answer"] == "The answer"

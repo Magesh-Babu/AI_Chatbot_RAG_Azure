@@ -2,6 +2,16 @@ import os
 import streamlit as st
 import requests
 
+def display_sources(sources):
+    """Renders a collapsible sources expander for RAG responses."""
+    if not sources:
+        return
+    with st.expander(f"Sources ({len(sources)} passages)"):
+        for i, src in enumerate(sources, 1):
+            st.markdown(f"**Source {i}** · Page {src['page']}")
+            st.caption(src["preview"] + "…")
+
+
 def display_chat():
     """Displays chat messages stored in session state."""
     if "messages" not in st.session_state or not st.session_state.messages:
@@ -9,7 +19,9 @@ def display_chat():
         st.session_state.messages = [{"role": "assistant", "content": "Hello, How can i help you?"}]
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.write(message["content"])   
+            st.write(message["content"])
+            if message.get("sources"):
+                display_sources(message["sources"])
 
 def clear_chat_history():
     """Clears the chat history and resets the session state."""
@@ -83,9 +95,11 @@ def main():
                 response = requests.post(f"{FASTAPI_BASE_URL}/document-query/", params={"question": prompt}, timeout=10)
                 if response.status_code == 200:
                     data = response.json()
+                    sources = data.get("sources", [])
                     with st.chat_message("assistant"):
                         st.write(data['answer'])
-                    st.session_state.messages.append({"role": "assistant", "content": data['answer']})
+                        display_sources(sources)
+                    st.session_state.messages.append({"role": "assistant", "content": data['answer'], "sources": sources})
                 else:
                     st.error(f"Error querying document: {response.text}")
             else:

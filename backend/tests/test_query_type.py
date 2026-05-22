@@ -50,8 +50,9 @@ class TestHandleDocumentQuery:
         mock_engine = MagicMock()
         mock_index.as_chat_engine.return_value = mock_engine
         mock_engine.stream_chat.return_value.response_gen = iter(["Hello", " World"])
+        mock_engine.stream_chat.return_value.source_nodes = []
         result = handle_document_query(mock_index, "What is this about?", mock_llm)
-        assert result == "Hello World"
+        assert result == {"answer": "Hello World", "sources": []}
 
     def test_empty_prompt_raises_value_error(self):
         mock_index = MagicMock()
@@ -88,8 +89,9 @@ class TestHandleDocumentQuery:
         mock_engine = MagicMock()
         mock_index.as_chat_engine.return_value = mock_engine
         mock_engine.stream_chat.return_value.response_gen = iter(["token1", " token2", " token3"])
+        mock_engine.stream_chat.return_value.source_nodes = []
         result = handle_document_query(mock_index, "Question?", mock_llm)
-        assert result == "token1 token2 token3"
+        assert result == {"answer": "token1 token2 token3", "sources": []}
 
     def test_prompt_is_stripped_before_sending(self):
         mock_index = MagicMock()
@@ -97,5 +99,6 @@ class TestHandleDocumentQuery:
         mock_engine = MagicMock()
         mock_index.as_chat_engine.return_value = mock_engine
         mock_engine.stream_chat.return_value.response_gen = iter(["Answer"])
+        mock_engine.stream_chat.return_value.source_nodes = []
         handle_document_query(mock_index, "  Question?  ", mock_llm)
         mock_engine.stream_chat.assert_called_once_with("Question?")

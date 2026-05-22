@@ -66,7 +66,14 @@ def handle_document_query(index, prompt, llm):
         result = "".join(response_stream.response_gen)
         duration_ms = round((time.monotonic() - start) * 1000)
         logger.info("Document query completed. duration_ms=%d", duration_ms)
-        return result
+
+        sources = []
+        for node in (response_stream.source_nodes or []):
+            page = node.node.metadata.get("page_label", "N/A")
+            preview = node.node.get_content()[:150].strip()
+            sources.append({"page": page, "preview": preview})
+
+        return {"answer": result, "sources": sources}
     except Exception as e:
         logger.error("LLM call failed for document query: %s", e, exc_info=True)
         raise RuntimeError(f"LLM call failed for document query: {e}") from e

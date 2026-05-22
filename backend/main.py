@@ -73,8 +73,8 @@ def create_index_from_document(file_path: str) -> None:
 
 # --- Querying ---
 
-def get_document_answer(question: str) -> str:
-    """Gets an answer to a question about the uploaded document."""
+def get_document_answer(question: str) -> dict:
+    """Gets an answer and source citations for a question about the uploaded document."""
     global global_index
     if global_index is None:
         logger.warning("Document query attempted with no document loaded.")
@@ -160,8 +160,8 @@ async def document_query(question: str = Query(..., min_length=1, description="Q
         logger.warning("Rejected document query — blank question.")
         raise HTTPException(status_code=422, detail="Question cannot be blank.")
     logger.info("Document query received. question_length=%d", len(question.strip()))
-    answer = get_document_answer(question)
-    return JSONResponse(content={"answer": answer})
+    result = get_document_answer(question)
+    return JSONResponse(content=result)
 
 
 @app.post("/general-query/")
