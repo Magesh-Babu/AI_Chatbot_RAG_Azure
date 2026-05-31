@@ -67,6 +67,8 @@ def connect_chromadb_create_index(documents):
     try:
         chroma_collection = chroma_client.get_or_create_collection("given_doc")
         Settings.embed_model = initialize_embed_model()
+        Settings.chunk_size = 512
+        Settings.chunk_overlap = 50
         vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
         index = VectorStoreIndex.from_documents(documents, storage_context=storage_context)

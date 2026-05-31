@@ -17,9 +17,14 @@ An AI-powered chatbot with two modes — general Q&A and document-based Q&A usin
 
 1. **General Query** — Ask any question; answered directly by Llama 3.3 (70B Instruct) via Azure AI.
 2. **Document RAG** — Upload a PDF or TXT file; the chatbot indexes it with Cohere embeddings and answers questions using only that document's content.
-3. **Microservices Architecture** — Decoupled FastAPI backend and Streamlit frontend, each in its own container.
-4. **Persistent Vector Store** — ChromaDB stores embeddings on disk so the index survives container restarts.
-5. **CI/CD Pipeline** — Every push to `main` builds, pushes to GHCR, and deploys to Azure Container Apps automatically.
+3. **Source Citations** — Every RAG response includes a collapsible *Sources* panel showing the page number and a text preview for each retrieved passage.
+4. **Advanced Retrieval** — Three-stage retrieval pipeline for higher answer quality:
+   - *Chunk tuning* — Documents are split into 512-token chunks with 50-token overlap for precise indexing.
+   - *MMR (Maximal Marginal Relevance)* — Retrieves diverse passages instead of redundant similar ones.
+   - *LLM Reranking* — Llama 3 scores the top-10 retrieved chunks for relevance and keeps only the best 3 before generating an answer.
+5. **Microservices Architecture** — Decoupled FastAPI backend and Streamlit frontend, each in its own container.
+6. **Persistent Vector Store** — ChromaDB stores embeddings on disk so the index survives container restarts.
+7. **CI/CD Pipeline** — Every push to `main` builds, pushes to GHCR, and deploys to Azure Container Apps automatically.
 
 ---
 

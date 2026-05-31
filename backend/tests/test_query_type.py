@@ -44,13 +44,18 @@ class TestHandleGeneralQuery:
 
 
 class TestHandleDocumentQuery:
-    def test_valid_params_returns_joined_response(self):
+    def _make_mock_response(self, answer, sources=None):
+        mock_response = MagicMock()
+        mock_response.response = answer
+        mock_response.source_nodes = sources or []
+        return mock_response
+
+    def test_valid_params_returns_answer_and_sources(self):
         mock_index = MagicMock()
         mock_llm = MagicMock()
         mock_engine = MagicMock()
-        mock_index.as_chat_engine.return_value = mock_engine
-        mock_engine.stream_chat.return_value.response_gen = iter(["Hello", " World"])
-        mock_engine.stream_chat.return_value.source_nodes = []
+        mock_index.as_query_engine.return_value = mock_engine
+        mock_engine.query.return_value = self._make_mock_response("Hello World")
         result = handle_document_query(mock_index, "What is this about?", mock_llm)
         assert result == {"answer": "Hello World", "sources": []}
 
@@ -79,26 +84,24 @@ class TestHandleDocumentQuery:
     def test_engine_exception_raises_runtime_error(self):
         mock_index = MagicMock()
         mock_llm = MagicMock()
-        mock_index.as_chat_engine.side_effect = Exception("Engine init failed")
+        mock_index.as_query_engine.side_effect = Exception("Engine init failed")
         with pytest.raises(RuntimeError, match="LLM call failed for document query"):
             handle_document_query(mock_index, "What is this about?", mock_llm)
 
-    def test_multiple_tokens_are_joined_correctly(self):
+    def test_response_text_is_returned_as_answer(self):
         mock_index = MagicMock()
         mock_llm = MagicMock()
         mock_engine = MagicMock()
-        mock_index.as_chat_engine.return_value = mock_engine
-        mock_engine.stream_chat.return_value.response_gen = iter(["token1", " token2", " token3"])
-        mock_engine.stream_chat.return_value.source_nodes = []
+        mock_index.as_query_engine.return_value = mock_engine
+        mock_engine.query.return_value = self._make_mock_response("The full answer text")
         result = handle_document_query(mock_index, "Question?", mock_llm)
-        assert result == {"answer": "token1 token2 token3", "sources": []}
+        assert result == {"answer": "The full answer text", "sources": []}
 
     def test_prompt_is_stripped_before_sending(self):
         mock_index = MagicMock()
         mock_llm = MagicMock()
         mock_engine = MagicMock()
-        mock_index.as_chat_engine.return_value = mock_engine
-        mock_engine.stream_chat.return_value.response_gen = iter(["Answer"])
-        mock_engine.stream_chat.return_value.source_nodes = []
+        mock_index.as_query_engine.return_value = mock_engine
+        mock_engine.query.return_value = self._make_mock_response("Answer")
         handle_document_query(mock_index, "  Question?  ", mock_llm)
-        mock_engine.stream_chat.assert_called_once_with("Question?")
+        mock_engine.query.assert_called_once_with("Question?")

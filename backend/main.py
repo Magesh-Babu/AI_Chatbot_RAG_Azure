@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from query_type import handle_general_query, handle_document_query
 from chat import initialize_llm, connect_chromadb_create_index, clear_chromadb_db
+from llama_index.core.postprocessor import LLMRerank
 from logging_config import get_logger
 
 load_dotenv()
@@ -36,6 +37,10 @@ global_document_name = None
 logger.info("Initialising backend application.")
 llm = initialize_llm()
 logger.info("LLM initialised successfully.")
+
+# Reranker: fetches top-10 chunks via MMR, then uses Llama 3 to score and keep the top 3
+reranker = LLMRerank(choice_batch_size=5, top_n=3, llm=llm)
+logger.info("LLM reranker initialised.")
 
 MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024  # 5MB
 ALLOWED_EXTENSIONS = {".pdf", ".txt"}
@@ -80,7 +85,7 @@ def get_document_answer(question: str) -> dict:
         logger.warning("Document query attempted with no document loaded.")
         raise HTTPException(status_code=400, detail="No document has been uploaded yet.")
     try:
-        return handle_document_query(global_index, question, llm)
+        return handle_document_query(global_index, question, llm, reranker)
     except ValueError as e:
         logger.warning("Validation error on document query: %s", e)
         raise HTTPException(status_code=422, detail=str(e)) from e
